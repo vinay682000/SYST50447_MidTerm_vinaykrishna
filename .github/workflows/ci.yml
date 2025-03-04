@@ -1,12 +1,28 @@
-name: Test Workflow
+name: CI Workflow
+
 on:
+  pull_request:
   push:
     branches:
-      - midterm
+      - main
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Test
-      run: echo "Testing workflow triggers"
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: API Endpoint Testing
+      run: |
+        pytest test_health.py --verbose
