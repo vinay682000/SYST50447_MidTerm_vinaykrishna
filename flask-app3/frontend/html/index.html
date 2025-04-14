@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask Docker Demo</title>
+</head>
+<body>
+    <h1>Flask Docker Demo</h1>
+    <input type="text" id="messageInput" placeholder="Enter a message">
+    <button onclick="addMessage()">Add Message</button>
+    <h2>Messages:</h2>
+    <ul id="messagesList"></ul>
+
+    <script>
+        async function fetchMessages() {
+            const response = await fetch('/api/messages');
+            const messages = await response.json();
+            const messagesList = document.getElementById('messagesList');
+            messagesList.innerHTML = '';
+            messages.forEach(msg => {
+                const li = document.createElement('li');
+                li.textContent = `${msg.id}: ${msg.content}`;
+                messagesList.appendChild(li);
+            });
+        }
+
+        async function addMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const content = messageInput.value;
+            if (content) {
+                await fetch('/api/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                messageInput.value = '';
+                fetchMessages();
+            }
+        }
+
+        // Fetch messages on page load
+        fetchMessages();
+    </script>
+</body>
+</html>
