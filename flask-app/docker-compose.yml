@@ -1,0 +1,85 @@
+version: '3'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - frontend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api:
+    build: .
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=securepassword
+    depends_on:
+      - db
+    networks:
+      - frontend-network
+      - backend-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.settimeout(1); s.connect(('localhost', 5000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=securepassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v2.30.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - backend-network
+
+  grafana:
+    image: grafana/grafana:8.1.2
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - frontend-network
+      - backend-network
+
+networks:
+  frontend-network:
+  backend-network:
+
+volumes:
+  postgres_data:

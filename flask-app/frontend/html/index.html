@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask Docker Demo</title>
+    <script>
+    async function loadMessages() {
+        const response = await fetch('/api/messages');
+        const messages = await response.json();
+        const messageList = document.getElementById('messages');
+        messageList.innerHTML = '';
+        
+        messages.forEach(msg => {
+            const li = document.createElement('li');
+            li.textContent = `${msg.id}: ${msg.content}`;
+            messageList.appendChild(li);
+        });
+    }
+
+    async function addMessage() {
+        const content = document.getElementById('message').value;
+        await fetch('/api/message', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({content})
+        });
+        loadMessages();
+        document.getElementById('message').value = '';
+    }
+    </script>
+</head>
+<body onload="loadMessages()">
+    <h1>Flask Docker Demo</h1>
+    <input type="text" id="message" placeholder="Enter a message">
+    <button onclick="addMessage()">Add Message</button>
+    <h2>Messages:</h2>
+    <ul id="messages"></ul>
+</body>
+</html>
